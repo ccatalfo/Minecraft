@@ -81,6 +81,8 @@ SAND = tex_coords((1, 1), (1, 1), (1, 1))
 BRICK = tex_coords((2, 0), (2, 0), (2, 0))
 STONE = tex_coords((2, 1), (2, 1), (2, 1))
 
+EARTH_DEPTH = 20
+
 FACES = [
     ( 0, 1, 0),
     ( 0,-1, 0),
@@ -164,9 +166,11 @@ class Model(object):
         y = 0  # initial y height
         for x in xrange(-n, n + 1, s):
             for z in xrange(-n, n + 1, s):
-                # create a layer stone an grass everywhere.
+                # create a layer stone and grass everywhere.
                 self.add_block((x, y - 2, z), GRASS, immediate=False)
                 self.add_block((x, y - 3, z), STONE, immediate=False)
+                for i in xrange(EARTH_DEPTH):
+                    self.add_block((x, y - (i+3), z),SAND , immediate=False)
                 if x in (-n, n) or z in (-n, n):
                     # create outer walls.
                     for dy in xrange(-2, 3):
@@ -181,7 +185,7 @@ class Model(object):
             h = random.randint(1, 6)  # height of the hill
             s = random.randint(4, 8)  # 2 * s is the side length of the hill
             d = 1  # how quickly to taper off the hills
-            t = random.choice([GRASS, SAND, BRICK])
+            t = random.choice([GRASS, SAND])
             for y in xrange(c, c + h):
                 for x in xrange(a - s, a + s + 1):
                     for z in xrange(b - s, b + s + 1):
@@ -837,8 +841,8 @@ class Window(pyglet.window.Window):
 
         """
         x, y, z = self.position
-        self.label.text = '%02d (%.2f, %.2f, %.2f) %d / %d' % (
-            pyglet.clock.get_fps(), x, y, z,
+        self.label.text = '%02d (%.2f, %.2f, %.2f) %s %d / %d' % (
+            pyglet.clock.get_fps(), x, y, z,self.flying,
             len(self.model._shown), len(self.model.world))
         self.label.draw()
 
