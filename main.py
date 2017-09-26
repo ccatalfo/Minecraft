@@ -1,5 +1,7 @@
 from __future__ import division
 
+import pickle
+import pprint
 import sys
 import math
 import random
@@ -14,6 +16,10 @@ from pyglet.graphics import TextureGroup
 from pyglet.window import key, mouse
 
 logging.basicConfig(level=logging.DEBUG)
+WORLD_FILE = None
+if len(sys.argv) > 1:
+    logging.info('using world file: %s' % sys.argv[1])
+    WORLD_FILE = sys.argv[1]
 
 TICKS_PER_SEC = 60
 
@@ -134,7 +140,7 @@ def sectorize(position):
 
 class Model(object):
 
-    def __init__(self):
+    def __init__(self, world_file=None):
 
         # A Batch is a collection of vertex lists for batched rendering.
         self.batch = pyglet.graphics.Batch()
@@ -145,6 +151,12 @@ class Model(object):
         # A mapping from position to the texture of the block at that position.
         # This defines all the blocks that are currently in the world.
         self.world = {}
+
+        if world_file:
+            self.world_file = world_file
+        else:
+            self.world_file = "minecraft-%s.pkl" % time.time()
+
 
         # Same mapping as `world` but only contains blocks that are shown.
         self.shown = {}
@@ -203,7 +215,10 @@ class Model(object):
 
         """
         logging.info('initializing')
-        self.generate_new_world()
+        if WORLD_FILE:
+            self.load_world(WORLD_FILE)
+        else:
+            self.generate_new_world()
 
     def hit_test(self, position, vector, max_distance=8):
         """ Line of sight search from current position. If a block is
@@ -243,7 +258,7 @@ class Model(object):
                 return True
         return False
 
-    def add_block(self, position, texture, immediate=True):
+    def add_block(self, position, texture, immediate=True, removePrevious = True):
         """ Add a block with the given `texture` and `position` to the world.
 
         Parameters
@@ -257,8 +272,9 @@ class Model(object):
             Whether or not to draw the block immediately.
 
         """
-        if position in self.world:
-            self.remove_block(position, immediate)
+        if removePrevious:
+            if position in self.world:
+                self.remove_block(position, immediate)
         self.world[position] = texture
         self.sectors.setdefault(sectorize(position), []).append(position)
         if immediate:
@@ -443,6 +459,30 @@ class Model(object):
         while self.queue:
             self._dequeue()
 
+    def save_world(self):
+        logging.info('saving world to file: %s' % self.world_file)
+        data = {'world':self.world,'shown':self.shown,'sectors' : self.sectors}
+        # pp = pprint.PrettyPrinter(indent=4)
+        # pp.pprint(data)
+        pickle.dump(data, open(self.world_file,'wb'))
+
+    def load_world(self, WORLD_FILE):
+        logging.info('loading world from world file:%s' % WORLD_FILE)
+        self.data = pickle.load(open(WORLD_FILE,'rb'))
+        if self.data:
+            logging.info('found data, setting')
+            self.world = self.data['world']
+            self.shown = self.data['shown']
+            self.sectors = self.data['sectors']
+            logging.info('adding blocks from world file')
+            for position,texture in self.world.items():
+                self.add_block(position,texture,False,removePrevious=False)
+                self.show_block(position)
+            logging.info('adding blocks completed')
+        else:
+            logging.error('no data found in world file, generating new')
+            self.generate_new_world()
+
 
 class Window(pyglet.window.Window):
 
@@ -496,7 +536,7 @@ class Window(pyglet.window.Window):
             key._6, key._7, key._8, key._9, key._0]
 
         # Instance of the model that handles the world.
-        self.model = Model()
+        self.model = Model(world_file=WORLD_FILE)
 
         # The label that is displayed in the top left of the canvas.
         self.label = pyglet.text.Label('', font_name='Arial', font_size=18,
@@ -904,6 +944,7 @@ def setup():
 @event_loop.event
 def on_window_close(window):
     event_loop.exit()
+    window.model.save_world()
     logging.info('closing')
 
 def main():
