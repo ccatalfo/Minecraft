@@ -4,9 +4,11 @@ import sys
 import math
 import random
 import time
+import logging
 
 from collections import deque
 from pyglet import image
+from pyglet.app import event_loop
 from pyglet.gl import *
 from pyglet.graphics import TextureGroup
 from pyglet.window import key, mouse
@@ -161,6 +163,7 @@ class Model(object):
         """ Initialize the world by placing all the blocks.
 
         """
+        logging.info('initializing')
         n = 80  # 1/2 width and height of world
         s = 1  # step size
         y = 0  # initial y height
@@ -892,11 +895,19 @@ def setup():
     setup_fog()
 
 
+@event_loop.event
+def on_window_close(window):
+    event_loop.exit()
+    logging.info('closing')
+
 def main():
     window = Window(width=800, height=600, caption='Pyglet', resizable=True)
     # Hide the mouse cursor and prevent the mouse from leaving the window.
     window.set_exclusive_mouse(True)
     setup()
+    event_loop = pyglet.app.EventLoop()
+
+    logging.info('running')
     pyglet.app.run()
 
 
