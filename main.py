@@ -3,6 +3,8 @@ from __future__ import division
 import pickle
 import pprint
 import sys
+import os
+import glob
 import math
 import random
 import time
@@ -16,10 +18,20 @@ from pyglet.graphics import TextureGroup
 from pyglet.window import key, mouse
 
 logging.basicConfig(level=logging.DEBUG)
+
+WORLD_FILE_EXTENSION = 'pmc'
 WORLD_FILE = None
 if len(sys.argv) > 1:
     logging.info('using world file: %s' % sys.argv[1])
     WORLD_FILE = sys.argv[1]
+else: # latest .pmc file
+    list_of_files = glob.glob('*.%s' % WORLD_FILE_EXTENSION)
+    if len(list_of_files):
+        latest_file = max(list_of_files, key=os.path.getctime)
+        if latest_file:
+            logging.info('will load world from latest world file: %s' % latest_file)
+            WORLD_FILE = latest_file
+
 
 TICKS_PER_SEC = 60
 
@@ -155,7 +167,7 @@ class Model(object):
         if world_file:
             self.world_file = world_file
         else:
-            self.world_file = "minecraft-%s.pkl" % time.time()
+            self.world_file = "minecraft-%s.%s" % (time.time(), WORLD_FILE_EXTENSION)
 
 
         # Same mapping as `world` but only contains blocks that are shown.
