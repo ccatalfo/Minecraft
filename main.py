@@ -13,6 +13,8 @@ from pyglet.gl import *
 from pyglet.graphics import TextureGroup
 from pyglet.window import key, mouse
 
+logging.basicConfig(level=logging.DEBUG)
+
 TICKS_PER_SEC = 60
 
 # Size of sectors used to ease block loading.
@@ -159,11 +161,8 @@ class Model(object):
 
         self._initialize()
 
-    def _initialize(self):
-        """ Initialize the world by placing all the blocks.
-
-        """
-        logging.info('initializing')
+    def generate_new_world(self):
+        logging.info('generating new world')
         n = 80  # 1/2 width and height of world
         s = 1  # step size
         y = 0  # initial y height
@@ -198,6 +197,13 @@ class Model(object):
                             continue
                         self.add_block((x, y, z), t, immediate=False)
                 s -= d  # decrement side lenth so hills taper off
+
+    def _initialize(self):
+        """ Initialize the world by placing all the blocks.
+
+        """
+        logging.info('initializing')
+        self.generate_new_world()
 
     def hit_test(self, position, vector, max_distance=8):
         """ Line of sight search from current position. If a block is
