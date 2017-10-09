@@ -480,7 +480,12 @@ class Model(object):
 
     def load_world(self, WORLD_FILE):
         logging.info('loading world from world file:%s' % WORLD_FILE)
-        self.data = pickle.load(open(WORLD_FILE,'rb'))
+        try:
+            self.data = pickle.load(open(WORLD_FILE,'rb'))
+        except Exception as e:
+            logging.error('unable to load world file: %s' % WORLD_FILE)
+            logging.error(e)
+            self.data = None
         if self.data:
             logging.info('found data, setting')
             self.world = self.data['world']
