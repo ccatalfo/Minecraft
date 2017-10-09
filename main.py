@@ -102,6 +102,8 @@ GRASS = tex_coords((1, 0), (0, 1), (0, 0))
 SAND = tex_coords((1, 1), (1, 1), (1, 1))
 BRICK = tex_coords((2, 0), (2, 0), (2, 0))
 STONE = tex_coords((2, 1), (2, 1), (2, 1))
+MOSS_COVERED_STONE = tex_coords((3, 0), (3, 0), (3, 0))
+WOOD = tex_coords((3, 1), (3, 1), (3, 1))
 
 EARTH_DEPTH = 20
 
@@ -211,7 +213,7 @@ class Model(object):
             h = random.randint(1, 6)  # height of the hill
             s = random.randint(4, 8)  # 2 * s is the side length of the hill
             d = 1  # how quickly to taper off the hills
-            t = random.choice([GRASS])
+            t = random.choice([GRASS,MOSS_COVERED_STONE])
             for y in xrange(c, c + h):
                 for x in xrange(a - s, a + s + 1):
                     for z in xrange(b - s, b + s + 1):
@@ -542,7 +544,7 @@ class Window(pyglet.window.Window):
         self.dy = 0
 
         # A list of blocks the player can place. Hit num keys to cycle.
-        self.inventory = [BRICK, GRASS, SAND]
+        self.inventory = [WOOD, STONE]
 
         # The current block the user can place. Hit num keys to cycle.
         self.block = self.inventory[0]
